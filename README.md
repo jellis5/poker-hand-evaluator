@@ -1,2 +1,2 @@
 # texas-holdem
-Not anywhere near finished. 
+Texas Hold 'em implementation in Ruby. Not anywhere near finished. 
