@@ -2,7 +2,7 @@ class Card
 	include Comparable
 	
 	@@suits = [:clubs, :diamonds, :hearts, :spades]
-	@@ranks = [nil, :Ace, :'2', :'3', :'4', :'5', :'6', :'7', :'8', :'9', :'10', :Jack, :Queen, :King]
+	@@ranks = [nil, nil, :'2', :'3', :'4', :'5', :'6', :'7', :'8', :'9', :'10', :Jack, :Queen, :King, :Ace]
 	
 	attr_reader :rank_num, :suit, :rank
 	
