@@ -10,6 +10,6 @@ class Computer < Player
 	
 	def take_turn
 		puts "#{@name}'s turn..."
-		sleep(2)
+		sleep(0)
 	end
 end
