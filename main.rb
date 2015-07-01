@@ -2,6 +2,7 @@ require_relative 'deck'
 require_relative 'human'
 require_relative 'computer'
 require_relative 'player'
+require_relative 'card'
 
 # players array needs to cycle through players starting at a certain index
 class Array
@@ -71,18 +72,19 @@ def main
 		puts "\nHand number: #{hand_num}"
 		puts "Dealer: #{players[dealer_index]}\n"
 		deal_hands(deck, players)
-		while com_cards.length <= 5
+		loop do
 			#take turns (bet, check, fold or call, raise, fold)
 			#add com card
 			first_turn = dealer_index + 1
 			first_turn = first_turn % num_players if first_turn >= num_players
 			print_com_cards(com_cards)
 			players.each_from_start(first_turn) { |player| player.take_turn }
+			break if com_cards.length == 5
 			# if pre-flop (length == 0), add flop; else add turn and then river
 			com_cards.push(*deck.draw_cards(com_cards.length == 0 ? 3 : 1))
 		end
 		#find_winner(players, com_cards)
-		players[0].hand.evaluate(com_cards)
+		players[0].hand.evaluate([Card.new(3, 9), Card.new(3, 11), Card.new(2, 10), Card.new(3, 11), Card.new(3, 4)])#com_cards)
 		hand_num += 1
 	end
 end
