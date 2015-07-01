@@ -4,7 +4,7 @@ class Deck
 	def initialize
 		@cards = []
 		(0..3).each do |suit|
-			(1..13).each do |rank|
+			(2..14).each do |rank|
 				@cards << Card.new(suit, rank)
 			end
 		end
