@@ -15,73 +15,69 @@ class Hand
 		@cards.clear
 	end
 	
-######################################################################
-# WORK ON THIS
-	
-	def royal_flush?(total_hand)
-		counter = 14
-		ranks_uniq = total_hand.map { |card| card.rank_num }.uniq
-		# test if A-10
-		ranks_uniq.each do |rank|
-			break if counter == 9
-			return false if rank != counter
-			counter -= 1
-		end
-		# test if suits are same
-		suits = total_hand.map { |card| card.suit if card.rank_num.between?(10, 14) }.compact
-		[:clubs, :hearts, :diamonds, :spades].map{ |suit| suits.count(suit) }.any?{ |suitNum| suitNum >= 5 }
+	def royal_flush?(total_hand, suits)
+		[9] if straight_flush?(total_hand, suits) == 14
 	end
 	
-	def straight_flush?(total_hand)
+	def straight_flush?(total_hand, suits)
+		flush_suit = nil
+		suits = total_hand.map { |card| card.suit }
+		[:clubs, :hearts, :diamonds, :spades].each{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
+		return false if not flush_suit
+		flush_cards = total_hand.select{ |card| card.suit == flush_suit }
+		# flush exists; determine if straight exists
 		consec, consec_start = 0, 0
-		ranks_uniq = total_hand.map { |card| card.rank_num }.uniq
-		(0...ranks_uniq.length - 1).each do |i|
-			consec = (ranks_uniq[i] == ranks_uniq[i+1] + 1) ? consec + 1 : 0
+		(0...flush_cards.length - 1).each do |i|
+			consec = (flush_cards[i].rank_num == flush_cards[i+1].rank_num + 1) ? consec + 1 : 0
 			if consec == 4
 				consec_start = i - 3
+				return [8, flush_cards[consec_start].rank_num]
+			end
+		end
+		false
+	end
+	
+	def four_of_a_kind?(ranks)
+		ret_arr = []
+		ranks.each do |rank|
+			if ranks.count(rank) == 4
+				ret_arr.push(7, rank)
 				break
 			end
 		end
-		if consec == 4
-			puts 'test'
-			suits = total_hand.map { |card| card.suit if card.rank_num.between?(ranks_uniq[consec_start+4], ranks_uniq[consec_start]) }.compact
-			flush_suit = nil
-			[:clubs, :hearts, :diamonds, :spades].map{ |suit| suits.count(suit) }.any?{ |suitNum| flush_suit = suit if suitNum >= 5 }
-		end
-		false
+		ret_arr.empty? ? false : ret_arr
 	end
 	
-######################################################################
-	
-	def four_of_a_kind?(total_hand)
-		ranks = total_hand.map{ |card| card.rank_num }
-		ranks.each{ |rank| return rank if ranks.count(rank) == 4 }
-		false
-	end
-	
-	def full_house?(total_hand)
-		ranks = total_hand.map{ |card| card.rank_num }
+	def full_house?(ranks)
 		ranks.each do |rank1|
 			if ranks.count(rank1) == 3
-				ranks.each{ |rank2| return rank1 if ranks.count(rank2) == 2 }
-				return false
+				ranks.each do |rank2|
+					if ranks.count(rank2) == 2
+						return [6, rank1]
+					end
+				end
 			end
 		end
+		false
 	end
 	
-	def flush?(total_hand)
-		suits = total_hand.map { |card| card.suit }
+	def flush?(total_hand, suits)
+		ret_arr = []
 		flush_suit = nil
 		[:clubs, :diamonds, :hearts, :spades].any?{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
 		if flush_suit
-			total_hand.each{ |card| return card.rank_num if card.suit == flush_suit }
+			total_hand.each do |card|
+				if card.suit == flush_suit
+					ret_arr.push(5, card.rank_num)
+					break
+				end
+			end
 		end
-		false
+		ret_arr.empty? ? false : ret_arr
 	end
 	
-	def straight?(total_hand)
+	def straight?(ranks_uniq)
 		consec, consec_start = 0, 0
-		ranks_uniq = total_hand.map { |card| card.rank_num }.uniq
 		(0...ranks_uniq.length - 1).each do |i|
 			consec = (ranks_uniq[i] == ranks_uniq[i+1] + 1) ? consec + 1 : 0
 			if consec == 4
@@ -89,40 +85,102 @@ class Hand
 				break
 			end
 		end
-		return consec == 4 ? ranks_uniq[consec_start] : false
+		return consec == 4 ? [4, ranks_uniq[consec_start]] : false
 	end
 	
-	def three_of_a_kind?(total_hand)
-		ranks = total_hand.map{ |card| card.rank_num }
-		ranks.each{ |rank| return rank if ranks.count(rank) == 3 }
-		false
-	end
-	
-	def two_pair?(total_hand)
-		ranks = total_hand.map{ |card| card.rank_num }
-		ranks.each do |rank1|
-			if ranks.count(rank1) == 2
-				ranks.each{ |rank2| return [rank1, rank2] if rank2 != rank1 && ranks.count(rank2) == 2 }
+	def three_of_a_kind?(ranks)
+		ret_arr = []
+		ranks.each do |rank|
+			if ranks.count(rank) == 3
+				ret_arr.push(3, rank)
+				break
 			end
 		end
-		false
+		ret_arr.empty? ? false : ret_arr
 	end
 	
-	private :royal_flush?, :straight_flush?, :four_of_a_kind?, :full_house?, :flush?, :straight?, :three_of_a_kind?, :two_pair?
+	# kicker cards only come into play here and below
+	# DOESN'T WORK IF THREE PAIRS EXIST
+	def two_pair?(ranks)
+		ret_arr = []
+		ranks.each do |rank|
+			if ranks.count(rank) == 2
+				ret_arr << rank
+			end
+		end
+		ret_arr.uniq!
+		if ret_arr.length == 2
+			ret_arr.unshift(2)
+			# add kicker
+			ret_arr << ranks.find { |rank| ranks.count(rank) == 1}
+		end
+		ret_arr.length == 4 ? ret_arr : false
+	end
+	
+	def one_pair?(ranks)
+		ret_arr, kickers = [], []
+		ranks.each do |rank|
+			if ranks.count(rank) == 2
+				ret_arr.push(1, rank)
+				break
+			end
+		end
+		ranks.each do |rank|
+			if ranks.count(rank) == 1
+				ret_arr << rank
+				break
+			end
+		end
+		ret_arr[0] == 1 ? ret_arr : false
+	end
+	
+	private :royal_flush?, :straight_flush?, :four_of_a_kind?, :full_house?, :flush?, :straight?, :three_of_a_kind?, :two_pair?, :one_pair?
 	
 	def evaluate(com_cards)
 		total_hand = @cards + com_cards
 		total_hand.sort!.reverse!
 		puts total_hand
-		# check from greatest value hand to least
 		ranks = total_hand.map { |card| card.rank_num }
 		ranks_uniq = ranks.uniq
 		suits = total_hand.map { |card| card.suit }
-		#puts two_pair?(total_hand)
-		#puts full_house?(total_hand)
-		#puts four_of_a_kind?(total_hand)
-		#puts royal_flush?(total_hand)
-		#puts straight_flush?(total_hand)
+		# check from greatest value hand to least
+		if hand_value = royal_flush?(total_hand, suits)
+			return hand_value
+		else
+			if hand_value = straight_flush?(total_hand, suits)
+				return hand_value
+			else
+				if hand_value = four_of_a_kind?(ranks)
+					return hand_value
+				else
+					if hand_value = full_house?(ranks)
+						return hand_value
+					else
+						if hand_value = flush?(total_hand, suits)
+							return hand_value
+						else
+							if hand_value = straight?(ranks_uniq)
+								return hand_value
+							else
+								if hand_value = three_of_a_kind?(ranks)
+									return hand_value
+								else
+									if hand_value = two_pair?(ranks)
+										return hand_value
+									else
+										if hand_value = one_pair?(ranks)
+											return hand_value
+										else
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
 	end
 	
 	def to_s
