@@ -84,7 +84,7 @@ def main
 			com_cards.push(*deck.draw_cards(com_cards.length == 0 ? 3 : 1))
 		end
 		#find_winner(players, com_cards)
-		puts players[0].hand.evaluate(com_cards)
+		puts players[0].hand.evaluate([Card.new(1, 5), Card.new(0, 5), Card.new(0, 4), Card.new(2, 4), Card.new(1, 3), Card.new(1, 3)])#com_cards)
 		hand_num += 1
 	end
 end

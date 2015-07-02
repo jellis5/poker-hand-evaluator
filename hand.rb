@@ -100,7 +100,6 @@ class Hand
 	end
 	
 	# kicker cards only come into play here and below
-	# DOESN'T WORK IF THREE PAIRS EXIST
 	def two_pair?(ranks)
 		ret_arr = []
 		ranks.each do |rank|
@@ -109,6 +108,8 @@ class Hand
 			end
 		end
 		ret_arr.uniq!
+		# if three pairs, pick biggest two
+		ret_arr.pop if ret_arr.length == 3
 		if ret_arr.length == 2
 			ret_arr.unshift(2)
 			# add kicker
