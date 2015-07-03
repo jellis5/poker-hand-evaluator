@@ -2,7 +2,7 @@ require_relative 'deck'
 require_relative 'human'
 require_relative 'computer'
 require_relative 'player'
-require_relative 'card'
+require_relative 'card' # take this out later
 
 # players array needs to cycle through players starting at a certain index
 class Array
@@ -20,8 +20,16 @@ class Array
 end
 
 def find_winner(players, com_cards)
+	players.each{ |player| player.hand.eval_hand(com_cards) }
+	print "Let's see who won. Press enter to continue."
+	gets
 	players.each do |player|
-		###################################3
+		print_com_cards(com_cards)
+		puts "\n#{player.name} has..."
+		puts "#{player.hand.hand_value_name}\n"
+		puts "\n#{player.hand}"
+		print "\nPress enter to continue."
+		gets
 	end
 end
 
@@ -50,11 +58,15 @@ def main
 	hand_num = 1
 	num_comps = 1
 	chip_amount = 500
-	puts "Enter your name: "
-	you = Human.new(gets.chomp, chip_amount)
+	name = ''
+	until not name.empty? do
+		print "Enter your name: "
+		name = gets.chomp
+	end
+	you = Human.new(name, chip_amount)
 	loop do
 		begin
-			puts "Enter the number of computers (1-5): "
+			print "Enter the number of computers (1-5): "
 			num_comps = gets.chomp.to_i
 			raise TypeError if num_comps < 1 || num_comps > 5
 			break
@@ -69,6 +81,7 @@ def main
 		deck = Deck.new
 		deck.shuffle!
 		com_cards = []
+		pot = 0
 		puts "\nHand number: #{hand_num}"
 		puts "Dealer: #{players[dealer_index]}\n"
 		deal_hands(deck, players)
@@ -78,14 +91,21 @@ def main
 			first_turn = dealer_index + 1
 			first_turn = first_turn % num_players if first_turn >= num_players
 			print_com_cards(com_cards)
-			players.each_from_start(first_turn) { |player| player.take_turn }
+			puts "Pot: #{pot}\n\n"
+			players.each_from_start(first_turn) do |player|
+				turn_arr = player.take_turn(pot)
+				if turn_arr[0] == 2
+					pot += turn_arr[1]
+				end
+			end
 			break if com_cards.length == 5
 			# if pre-flop (length == 0), add flop; else add turn and then river
 			com_cards.push(*deck.draw_cards(com_cards.length == 0 ? 3 : 1))
 		end
-		#find_winner(players, com_cards)
-		puts players[0].hand.evaluate([Card.new(1, 5), Card.new(0, 5), Card.new(0, 4), Card.new(2, 4), Card.new(1, 3), Card.new(1, 3)])#com_cards)
+		find_winner(players, com_cards)
 		hand_num += 1
+		dealer_index += 1
+		dealer_index = dealer_index % players.length if dealer_index == players.length
 	end
 end
 
