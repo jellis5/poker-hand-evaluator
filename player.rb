@@ -1,11 +1,10 @@
 require_relative 'hand'
-require_relative 'chips'
 
 class Player
 	def initialize(name, chips_amount)
 		@name = name
 		@hand = Hand.new
-		@chips = Chips.new(chips_amount)
+		@chips = chips_amount
 	end
 	
 	attr_reader :name, :hand
