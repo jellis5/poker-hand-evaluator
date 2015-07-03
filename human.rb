@@ -6,7 +6,7 @@ class Human < Player
 	end
 	
 	# implement option to see other person's chips later
-	def take_turn(pot)
+	def take_turn
 		choice = 1
 		puts "\nYour turn.\nChips: #{@chips}\n\n"
 		puts @hand

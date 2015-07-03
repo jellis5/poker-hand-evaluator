@@ -20,9 +20,20 @@ class Array
 end
 
 def find_winner(players, com_cards)
+	winner = players[0]
 	players.each{ |player| player.hand.eval_hand(com_cards) }
 	print "Let's see who won. Press enter to continue."
 	gets
+	players.drop(1).each do |player|
+		player.hand.hand_value.each_with_index do |value, ind|
+			if value < winner.hand.hand_value[ind]
+				break
+			elsif value > winner.hand.hand_value[ind]
+				winner = player
+				break
+			end
+		end
+	end
 	players.each do |player|
 		print_com_cards(com_cards)
 		puts "\n#{player.name} has..."
@@ -31,6 +42,8 @@ def find_winner(players, com_cards)
 		print "\nPress enter to continue."
 		gets
 	end
+	puts "#{winner} wins!"
+	winner
 end
 
 def print_com_cards(com_cards)
@@ -93,7 +106,7 @@ def main
 			print_com_cards(com_cards)
 			puts "Pot: #{pot}\n\n"
 			players.each_from_start(first_turn) do |player|
-				turn_arr = player.take_turn(pot)
+				turn_arr = player.take_turn
 				if turn_arr[0] == 2
 					pot += turn_arr[1]
 				end

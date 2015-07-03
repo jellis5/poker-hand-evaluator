@@ -10,6 +10,8 @@ class Computer < Player
 	
 	def take_turn
 		puts "#{@name}'s turn..."
+		puts "#{@name} checks."
+		return [1]
 		sleep(0)
 	end
 end
