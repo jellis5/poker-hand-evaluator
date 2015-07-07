@@ -6,12 +6,12 @@ class Human < Player
 	end
 	
 	# implement option to see other person's chips later
-	def take_turn
+	def take_turn(current_bet)
 		choice = 1
 		puts "\nYour turn.\nChips: #{@chips}\n\n"
 		puts @hand
-		puts "\n1: Check"
-		puts "2: Bet"
+		puts "\n1: #{current_bet > 0 ? "Call #{current_bet - @current_bet_amount}" : "Check"}"
+		puts "2: #{current_bet > 0 ? "Raise" : "Bet"}"
 		puts "3: Fold"
 		loop do
 			begin
@@ -20,24 +20,26 @@ class Human < Player
 				raise TypeError if choice < 1 || choice > 3
 				break
 			rescue TypeError
-				retry
+				redo
 			end
 		end
 		case choice
 		when 1
-			puts "#{@name} checks. Press enter to continue."
+			@chips -= current_bet - @current_bet_amount if current_bet > 0
+			@current_bet_amount += current_bet
+			puts "#{@name} #{current_bet > 0 ? "calls" : "checks"}. Press enter to continue."
 			gets
 			return [1]
 		when 2
 			amount = 0
 			loop do
 				begin
-					print "Enter bet amount: "
+					print "Enter #{current_bet > 0 ? "raise" : "bet"} amount: "
 					amount = gets.chomp.to_i
 					raise TypeError if amount < 1 || amount > @chips
 					break
 				rescue TypeError
-					retry
+					redo
 				end
 			end
 			@chips -= amount
