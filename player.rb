@@ -5,10 +5,11 @@ class Player
 		@name = name
 		@hand = Hand.new
 		@chips = chips_amount
+		@current_bet_amount = 0
 	end
 	
 	attr_reader :name, :hand
-	attr_accessor :chips
+	attr_accessor :chips, :current_bet_amount
 	
 	def take_turn
 		raise NotImplementedError, 'take_turn method undefined!'
