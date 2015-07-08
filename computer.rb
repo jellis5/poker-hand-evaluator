@@ -10,6 +10,7 @@ class Computer < Player
 	
 	def take_turn(current_bet)
 		puts "#{@name}'s turn..."
+		sleep(0)
 		if current_bet > 0
 			@chips -= current_bet - @current_bet_amount
 			@current_bet_amount += current_bet
@@ -17,7 +18,8 @@ class Computer < Player
 		else
 			puts "#{@name} checks."
 		end
+		puts "Press enter to continue."
+		gets
 		return [1]
-		sleep(0)
 	end
 end

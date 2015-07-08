@@ -19,6 +19,13 @@ class Array
 	end
 end
 
+def print_chips(players)
+	puts "*****************"
+	puts "***** CHIPS *****"
+	players.each { |player| puts "#{player.name}: #{player.chips}"}
+	puts "*****************"
+end
+
 def find_winner(players, com_cards)
 	winner = players[0]
 	players.each{ |player| player.hand.eval_hand(com_cards) }
@@ -88,6 +95,7 @@ def main
 		end
 	end
 	players = init_players(you, num_comps, chip_amount)
+	print_chips(players)
 	num_players = players.length
 	dealer_index = rand(num_players)
 	while players.map{ |player| player.chips > 0 }.length > 1
@@ -100,29 +108,36 @@ def main
 		puts "Dealer: #{players[dealer_index]}\n"
 		deal_hands(deck, players)
 		loop do
-			first_turn = dealer_index + 1 >= active_players.length ? 0 : dealer_index + 1
+			current_turn_index = dealer_index + 1 >= active_players.length ? 0 : dealer_index + 1
 			print_com_cards(com_cards)
 			puts "Pot: #{pot}\n\n"
 			current_bet = 0
-			last_turn_index = first_turn - 1 < 0 ? active_players.length - 1 : first_turn - 1
+			last_turn_index = current_turn_index - 1 < 0 ? active_players.length - 1 : current_turn_index - 1
 			loop do
-				puts first_turn, last_turn_index
-				turn_arr = active_players[first_turn].take_turn(current_bet)
-				if turn_arr[0] == 2
+				puts current_turn_index, last_turn_index
+				turn_arr = active_players[current_turn_index].take_turn(current_bet)
+				case turn_arr[0]
+				when 2
 					current_bet += turn_arr[1]
-					last_turn_index = first_turn - 1 < 0 ? active_players.length - 1 : first_turn - 1
-				elsif turn_arr[0] == 3
-					active_players.delete_at(first_turn)
+					last_turn_index = current_turn_index - 1 < 0 ? active_players.length - 1 : current_turn_index - 1
+				when 3
+					print_chips(players)
+					redo
+				when 4
+					active_players.delete_at(current_turn_index)
+					current_turn_index -= 1
+					dealer_index -= 1
+					last_turn_index = current_turn_index - 1 < 0 ? active_players.length - 1 : current_turn_index - 1
 				end
-				break if (first_turn == last_turn_index) && (active_players[first_turn].current_bet_amount == current_bet)
-				first_turn = first_turn + 1 >= active_players.length ? 0 : first_turn + 1
+				break if (current_turn_index == last_turn_index) && (active_players[current_turn_index].current_bet_amount == current_bet)
+				current_turn_index = current_turn_index + 1 >= active_players.length ? 0 : current_turn_index + 1
 			end
 			active_players.each { |player| player.current_bet_amount = 0 }
 			break if com_cards.length == 5
 			# if pre-flop (length == 0), add flop; else add turn and then river
 			com_cards.push(*deck.draw_cards(com_cards.length == 0 ? 3 : 1))
 		end
-		find_winner(players, com_cards)
+		find_winner(active_players, com_cards)
 		hand_num += 1
 		dealer_index += 1
 		dealer_index = dealer_index % players.length if dealer_index == players.length

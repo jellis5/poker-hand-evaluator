@@ -12,12 +12,13 @@ class Human < Player
 		puts @hand
 		puts "\n1: #{current_bet > 0 ? "Call #{current_bet - @current_bet_amount}" : "Check"}"
 		puts "2: #{current_bet > 0 ? "Raise" : "Bet"}"
-		puts "3: Fold"
+		puts "3: Check Everyone's Chips"
+		puts "4: Fold"
 		loop do
 			begin
 				print "Enter choice: "
 				choice = gets.chomp.to_i
-				raise TypeError if choice < 1 || choice > 3
+				raise TypeError if choice < 1 || choice > 4
 				break
 			rescue TypeError
 				redo
@@ -27,7 +28,7 @@ class Human < Player
 		when 1
 			@chips -= current_bet - @current_bet_amount if current_bet > 0
 			@current_bet_amount += current_bet
-			puts "#{@name} #{current_bet > 0 ? "calls" : "checks"}. Press enter to continue."
+			print "#{@name} #{current_bet > 0 ? "calls" : "checks"}. Press enter to continue."
 			gets
 			return [1]
 		when 2
@@ -44,6 +45,12 @@ class Human < Player
 			end
 			@chips -= amount
 			return [2, amount]
+		when 3
+			return [3]
+		when 4
+			print "You folded. Press enter to continue."
+			gets
+			return [4]
 		end
 	end
 end
