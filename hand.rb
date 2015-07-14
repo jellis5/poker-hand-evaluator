@@ -3,8 +3,12 @@ require_relative 'card'
 class Hand
 	@@hands = [:'High Card', :'One Pair', :'Two Pair', :'Three of a Kind', :'Straight', :'Flush', :'Full House', :'Four of a Kind', :'Straight Flush', :'Royal Flush']
 
-	def initialize
-		@cards = []
+	def initialize(cards=[])
+		begin
+			@cards = cards.is_a?(String) ? parse_cards(cards) : cards
+		rescue TypeError
+			abort("Invalid argument!")
+		end
 		@hand_value = nil
 		@hand_value_name = nil
 	end
@@ -23,8 +27,8 @@ class Hand
 		@cards.clear
 	end
 	
-	def eval_hand(com_cards)
-		@hand_value = evaluate_value(com_cards)
+	def eval_hand
+		@hand_value = evaluate_value
 		@hand_value_name = evaluate_value_name
 	end
 	
@@ -36,16 +40,34 @@ class Hand
 	# PRIVATE METHODS
 	######################################################################
 	
-	def royal_flush?(total_hand, suits)
-		[9] if straight_flush?(total_hand, suits) == 14
+	def parse_cards(cards)
+		suits_map = {c: 0, \
+									d: 1, \
+									h: 2, \
+									s: 3}
+		ret_cards = []
+		cards = cards.split
+		cards.each do |card|
+			raise TypeError if card.length < 2 || card.length > 3
+			if card.length == 2
+				ret_cards << Card.new(suits_map[card[-1].to_sym], card[0].to_i)
+			elsif card.length == 3
+				ret_cards << Card.new(suits_map[card[-1].to_sym], card[0, 2].to_i)
+			end
+		end
+		ret_cards
 	end
 	
-	def straight_flush?(total_hand, suits)
+	def royal_flush?(hand, suits)
+		[9] if straight_flush?(hand, suits) == 14
+	end
+	
+	def straight_flush?(hand, suits)
 		flush_suit = nil
-		suits = total_hand.map { |card| card.suit }
-		[:clubs, :hearts, :diamonds, :spades].each{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
+		suits = hand.map { |card| card.suit }
+		Card::SUITS.each{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
 		return false if not flush_suit
-		flush_cards = total_hand.select{ |card| card.suit == flush_suit }
+		flush_cards = hand.select{ |card| card.suit == flush_suit }
 		# flush exists; determine if straight exists
 		consec, consec_start = 0, 0
 		(0...flush_cards.length - 1).each do |i|
@@ -82,12 +104,12 @@ class Hand
 		false
 	end
 	
-	def flush?(total_hand, suits)
+	def flush?(hand, suits)
 		ret_arr = []
 		flush_suit = nil
-		[:clubs, :diamonds, :hearts, :spades].any?{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
+		Card::SUITS.any?{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
 		if flush_suit
-			total_hand.each do |card|
+			hand.each do |card|
 				if card.suit == flush_suit
 					ret_arr.push(5, card.rank_num)
 					break
@@ -156,17 +178,16 @@ class Hand
 		ret_arr[0] == 1 ? ret_arr : false
 	end
 	
-	def evaluate_value(com_cards)
-		total_hand = @cards + com_cards
-		total_hand.sort!.reverse!
-		ranks = total_hand.map { |card| card.rank_num }
+	def evaluate_value
+		hand = @cards.sort.reverse
+		ranks = hand.map { |card| card.rank_num }
 		ranks_uniq = ranks.uniq
-		suits = total_hand.map { |card| card.suit }
+		suits = hand.map { |card| card.suit }
 		# check from greatest value hand to least
-		if hand_value = royal_flush?(total_hand, suits)
+		if hand_value = royal_flush?(hand, suits)
 			return hand_value
 		else
-			if hand_value = straight_flush?(total_hand, suits)
+			if hand_value = straight_flush?(hand, suits)
 				return hand_value
 			else
 				if hand_value = four_of_a_kind?(ranks)
@@ -175,7 +196,7 @@ class Hand
 					if hand_value = full_house?(ranks)
 						return hand_value
 					else
-						if hand_value = flush?(total_hand, suits)
+						if hand_value = flush?(hand, suits)
 							return hand_value
 						else
 							if hand_value = straight?(ranks_uniq)
