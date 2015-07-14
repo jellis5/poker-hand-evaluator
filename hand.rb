@@ -1,68 +1,40 @@
 require_relative 'card'
 
 class Hand
-	@@hands = [:'High Card', :'One Pair', :'Two Pair', :'Three of a Kind', :'Straight', :'Flush', :'Full House', :'Four of a Kind', :'Straight Flush', :'Royal Flush']
-
-	def initialize(cards=[])
-		begin
-			@cards = cards.is_a?(String) ? parse_cards(cards) : cards
-		rescue TypeError
-			abort("Invalid argument!")
+	HANDS = [:'High Card', :'One Pair', :'Two Pair', :'Three of a Kind', :'Straight', :'Flush', :'Full House', :'Four of a Kind', :'Straight Flush', :'Royal Flush']
+	
+	def self.eval_string(card_string)
+		suits_map = {c: 0, \
+					d: 1, \
+					h: 2, \
+					s: 3}
+		cards = card_string.split
+		hand = []
+		cards.each do |card|
+			raise TypeError if card.length < 2 || card.length > 3
+			if card.length == 2
+				hand << Card.new(suits_map[card[-1].to_sym], card[0].to_i)
+			elsif card.length == 3
+				hand << Card.new(suits_map[card[-1].to_sym], card[0, 2].to_i)
+			end
 		end
-		@hand_value = nil
-		@hand_value_name = nil
+		eval_hand(hand)[1]
 	end
 	
-	attr_reader :hand_value, :hand_value_name
-	
-	def length
-		@cards.length
-	end
-	
-	def add_cards(cards_to_add)
-		@cards.push(*cards_to_add)
-	end
-	
-	def clear
-		@cards.clear
-	end
-	
-	def eval_hand
-		@hand_value = evaluate_value
-		@hand_value_name = evaluate_value_name
-	end
-	
-	def to_s
-		@cards.inject([]) { |acc, card| acc << card.to_s }.join("\n")
+	def self.eval_hand(hand)
+		hand_value = evaluate_value(hand)
+		[hand_value, evaluate_value_name(hand, hand_value)]
 	end
 	
 	######################################################################
 	# PRIVATE METHODS
 	######################################################################
 	
-	def parse_cards(cards)
-		suits_map = {c: 0, \
-									d: 1, \
-									h: 2, \
-									s: 3}
-		ret_cards = []
-		cards = cards.split
-		cards.each do |card|
-			raise TypeError if card.length < 2 || card.length > 3
-			if card.length == 2
-				ret_cards << Card.new(suits_map[card[-1].to_sym], card[0].to_i)
-			elsif card.length == 3
-				ret_cards << Card.new(suits_map[card[-1].to_sym], card[0, 2].to_i)
-			end
-		end
-		ret_cards
+	def self.royal_flush?(hand, suits)
+		[9] if straight_flush?(hand, suits)[1] == 14
 	end
 	
-	def royal_flush?(hand, suits)
-		[9] if straight_flush?(hand, suits) == 14
-	end
-	
-	def straight_flush?(hand, suits)
+	def self.straight_flush?(hand, suits)
 		flush_suit = nil
 		suits = hand.map { |card| card.suit }
 		Card::SUITS.each{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
@@ -80,7 +52,7 @@ class Hand
 		false
 	end
 	
-	def four_of_a_kind?(ranks)
+	def self.four_of_a_kind?(ranks)
 		ret_arr = []
 		ranks.each do |rank|
 			if ranks.count(rank) == 4
@@ -91,7 +63,7 @@ class Hand
 		ret_arr.empty? ? false : ret_arr
 	end
 	
-	def full_house?(ranks)
+	def self.full_house?(ranks)
 		ranks.each do |rank1|
 			if ranks.count(rank1) == 3
 				ranks.each do |rank2|
@@ -104,7 +76,7 @@ class Hand
 		false
 	end
 	
-	def flush?(hand, suits)
+	def self.flush?(hand, suits)
 		ret_arr = []
 		flush_suit = nil
 		Card::SUITS.any?{ |suit| flush_suit = suit if suits.count(suit) >= 5 }
@@ -119,7 +91,7 @@ class Hand
 		ret_arr.empty? ? false : ret_arr
 	end
 	
-	def straight?(ranks_uniq)
+	def self.straight?(ranks_uniq)
 		consec, consec_start = 0, 0
 		(0...ranks_uniq.length - 1).each do |i|
 			consec = (ranks_uniq[i] == ranks_uniq[i+1] + 1) ? consec + 1 : 0
@@ -131,7 +103,7 @@ class Hand
 		return consec == 4 ? [4, ranks_uniq[consec_start]] : false
 	end
 	
-	def three_of_a_kind?(ranks)
+	def self.three_of_a_kind?(ranks)
 		ret_arr = []
 		ranks.each do |rank|
 			if ranks.count(rank) == 3
@@ -143,7 +115,7 @@ class Hand
 	end
 	
 	# kicker cards only come into play here and below
-	def two_pair?(ranks)
+	def self.two_pair?(ranks)
 		ret_arr = []
 		ranks.each do |rank|
 			if ranks.count(rank) == 2
@@ -156,12 +128,12 @@ class Hand
 		if ret_arr.length == 2
 			ret_arr.unshift(2)
 			# add kicker
-			ret_arr << ranks.find { |rank| ranks.count(rank) == 1}
+			ret_arr << ranks.find { |rank| ranks.count(rank) == 1 }
 		end
 		ret_arr.length == 4 ? ret_arr : false
 	end
 	
-	def one_pair?(ranks)
+	def self.one_pair?(ranks)
 		ret_arr, kickers = [], []
 		ranks.each do |rank|
 			if ranks.count(rank) == 2
@@ -178,8 +150,8 @@ class Hand
 		ret_arr[0] == 1 ? ret_arr : false
 	end
 	
-	def evaluate_value
-		hand = @cards.sort.reverse
+	def self.evaluate_value(hand)
+		hand.sort!.reverse!
 		ranks = hand.map { |card| card.rank_num }
 		ranks_uniq = ranks.uniq
 		suits = hand.map { |card| card.suit }
@@ -223,11 +195,11 @@ class Hand
 		end
 	end
 	
-	def evaluate_value_name
-		ret_string = @@hands[@hand_value[0]].to_s
-		case @hand_value[0]
+	def self.evaluate_value_name(hand, hand_value)
+		ret_string = HANDS[hand_value[0]].to_s
+		case hand_value[0]
 		when 0, 1, 3, 7
-			ret_string += " (#{Card::RANKS[@hand_value[1]]})"
+			ret_string += " (#{Card::RANKS[hand_value[1]]})"
 		when 2
 			ret_string += " (#{Card::RANKS[hand_value[1]]}, #{Card::RANKS[hand_value[2]]})"
 		when 4, 5, 8
@@ -238,6 +210,6 @@ class Hand
 		ret_string
 	end
 			
-	private :royal_flush?, :straight_flush?, :four_of_a_kind?, :full_house?, :flush?, :straight?, :three_of_a_kind?, :two_pair?, :one_pair?, :evaluate_value, :evaluate_value_name
+	private_class_method :royal_flush?, :straight_flush?, :four_of_a_kind?, :full_house?, :flush?, :straight?, :three_of_a_kind?, :two_pair?, :one_pair?, :evaluate_value, :evaluate_value_name, :eval_hand
 	
 end

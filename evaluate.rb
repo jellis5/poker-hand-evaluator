@@ -8,11 +8,20 @@ options = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options]"
 
-  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
-    options[:verbose] = v
+  opts.on("-s", "--as-string STRING", "Pass in hand as string to be evaluated") do |s|
+    options[:s] = s
   end
+  
+  opts.on("-r", "--random NUM", "Run NUM random hands") do |r|
+	options[:r] = r
+  end
+  
 end.parse!
 
-hand = ARGV.length == 1 ? Hand.new(ARGV[0]) : Hand.new
-hand.eval_hand
-puts hand.hand_value_name
+abort("No arguments given!") if options.empty?
+abort("Improper arguments!") if options.length > 1
+begin
+	puts Hand.eval_string(options[:s])
+rescue TypeError
+	abort("String argument not valid!")
+end
