@@ -1,4 +1,5 @@
 require_relative 'card'
+require_relative 'deck'
 
 class Hand
 	HANDS = [:'High Card', :'One Pair', :'Two Pair', :'Three of a Kind', :'Straight', :'Flush', :'Full House', :'Four of a Kind', :'Straight Flush', :'Royal Flush']
@@ -21,14 +22,26 @@ class Hand
 		eval_hand(hand)[1]
 	end
 	
-	def self.eval_hand(hand)
-		hand_value = evaluate_value(hand)
-		[hand_value, evaluate_value_name(hand, hand_value)]
+	def self.eval_num(n)
+		n = n.to_i
+		puts "Out of #{n} hands..."
+		hand_nums = [0] * 10
+		n.times do
+			d = Deck.new
+			d.shuffle!
+			hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
+		end
+		hand_nums
 	end
 	
 	######################################################################
 	# PRIVATE METHODS
 	######################################################################
+	
+	def self.eval_hand(hand)
+		hand_value = evaluate_value(hand)
+		[hand_value, evaluate_value_name(hand, hand_value)]
+	end
 	
 	def self.royal_flush?(hand, suits)
 		return [9] if straight_flush?(hand, suits) && (straight_flush?(hand, suits)[1] == 14)
@@ -69,7 +82,7 @@ class Hand
 			if ranks.count(rank1) == 3
 				ranks.each do |rank2|
 					if ranks.count(rank2) == 2
-						return [6, rank1]
+						return [6, rank1, rank2]
 					end
 				end
 			end

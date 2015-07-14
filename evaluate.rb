@@ -33,5 +33,10 @@ if options.has_key?(:s)
 		abort("String argument not valid!")
 	end
 else
-	puts 'else'
+	begin
+		results = Hand.eval_num(options[:r])
+	rescue TypeError
+		abort("Num argument not valid!")
+	end
+	results.each_with_index { |num, i| puts "#{Hand::HANDS[i]}: #{num}" }
 end
