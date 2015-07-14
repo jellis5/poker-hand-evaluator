@@ -31,7 +31,8 @@ class Hand
 	######################################################################
 	
 	def self.royal_flush?(hand, suits)
-		[9] if straight_flush?(hand, suits)[1] == 14
+		return [9] if straight_flush?(hand, suits) && (straight_flush?(hand, suits)[1] == 14)
+		false
 	end
 	
 	def self.straight_flush?(hand, suits)
