@@ -16,6 +16,10 @@ begin
 		opts.on("-r", "--random NUM", "Run NUM random hands") do |r|
 			options[:r] = r
 		end
+		
+		opts.on("-t", "--threads NUM", "Multithreading for random hands. Use only with non-GIL implementations (like JRuby and Rubinius)") do |t|
+			options[:t] = t
+		end
   
 	end.parse!
 rescue OptionParser::InvalidOption
@@ -24,8 +28,12 @@ rescue OptionParser::MissingArgument
 	abort("Argument missing!")
 end
 
-abort("No arguments given!") if options.empty?
-abort("Improper arguments!") if options.length > 1
+if options.empty?
+	abort("No arguments given!")
+elsif (options.length == 2 && options.has_key?(:s)) || (options.length > 2)
+	abort("Improper arguments")
+end
+
 if options.has_key?(:s)
 	begin
 		puts Hand.eval_string(options[:s])
@@ -34,7 +42,7 @@ if options.has_key?(:s)
 	end
 else
 	begin
-		results = Hand.eval_num(options[:r])
+		results = Hand.eval_num(options[:r], options[:t])
 	rescue TypeError
 		abort("Num argument not valid!")
 	end

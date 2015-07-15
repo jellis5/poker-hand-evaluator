@@ -22,14 +22,40 @@ class Hand
 		eval_hand(hand)[1]
 	end
 	
-	def self.eval_num(n)
+	def self.eval_num(n, num_threads=nil)
 		n = n.to_i
-		puts "Out of #{n} hands..."
 		hand_nums = [0] * 10
-		n.times do
-			d = Deck.new
-			d.shuffle!
-			hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
+		puts "Out of #{n} hands..."
+		if num_threads.nil?
+			n.times do
+				d = Deck.new
+				d.shuffle!
+				hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
+			end
+		else
+			# multithreaded support
+			num_threads = 20
+			total_hands = 0
+			mutex = Mutex.new
+			threads = num_threads.times.map do
+						Thread.new do
+						  while total_hands < n
+							begin
+							  d = Deck.new
+							  d.shuffle!
+							  mutex.synchronize do
+								  total_hands += 1
+								  hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
+							  end
+							  rescue ThreadError
+							    mutex.synchronize do
+								  total_hands -= 1
+							  end
+							end
+						  end
+					    end
+					  end
+		  threads.each { |t| t.join }
 		end
 		hand_nums
 	end
