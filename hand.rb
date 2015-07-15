@@ -38,23 +38,23 @@ class Hand
 			total_hands = 0
 			mutex = Mutex.new
 			threads = num_threads.times.map do
-						Thread.new do
-						  while total_hands < n
-							begin
-							  d = Deck.new
-							  d.shuffle!
-							  mutex.synchronize do
-								  total_hands += 1
-								  hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
-							  end
-							  rescue ThreadError
-							    mutex.synchronize do
-								  total_hands -= 1
-							  end
-							end
-						  end
-					    end
-					  end
+									Thread.new do
+										while total_hands < n
+											begin
+												d = Deck.new
+												d.shuffle!
+												mutex.synchronize do
+													total_hands += 1
+													hand_nums[eval_hand(d.draw_cards(5))[0][0]] += 1
+												end
+											rescue ThreadError
+												mutex.synchronize do
+													total_hands -= 1
+												end
+											end
+										end
+									end
+								end
 		  threads.each { |t| t.join }
 		end
 		hand_nums
