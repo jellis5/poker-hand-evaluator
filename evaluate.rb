@@ -7,7 +7,7 @@ require_relative 'hand'
 options = {}
 begin
 	OptionParser.new do |opts|
-		opts.banner = "Usage: #{$0} [options]"
+		opts.banner = "Usage: ruby #{$0} [options]"
 
 		opts.on("-s", "--as-string STRING", "Pass in hand as string to be evaluated") do |s|
 			options[:s] = s
